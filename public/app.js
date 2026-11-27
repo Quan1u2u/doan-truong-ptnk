@@ -230,7 +230,7 @@ function renderMerch() {
   const M = D.merch;
   const show = !!(M && M.hien !== false && (M.sanPham || []).length);
   const onHome = show && M.hienTrangChu !== false;
-  $$('nav a[href="./merch.html"]:not([aria-current])').forEach(a => { a.hidden = !onHome; });
+  $$('nav a[href="/merch"]:not([aria-current])').forEach(a => { a.hidden = !onHome; });
   const tz = $('[data-merch-teaser]');
   if (tz) {
     tz.hidden = !onHome;
@@ -423,7 +423,7 @@ const routeSections = {
   '/top': null, '/mo-don': '#mo-don', '/tien-ich': '#tien-ich',
   '/bantin': '#bantin', '/bch': '#bch', '/clb': '#clb'
 };
-const route = location.pathname.replace(/\\/$/, '') || '/top';
+const route = location.pathname.replace(/\/$/, '') || '/top';
 const target = routeSections[route];
 if (Object.prototype.hasOwnProperty.call(routeSections, route)) {
   requestAnimationFrame(() => {
