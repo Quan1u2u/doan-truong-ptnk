@@ -1,4 +1,4 @@
-// Trang quản trị: mở trực tiếp tại /admin
+// Trang quản trị: mở bằng đường dẫn .../#admin
 (() => {
 const root = document.getElementById('admin-root');
 if (!root) return;
@@ -351,7 +351,7 @@ root.addEventListener('click', async e => {
   if (t.dataset.tab) { tab = t.dataset.tab; editing = null; if (tab === 'merch') { orders = null; sheet = null; } render(); return; }
   const act = t.dataset.act, i = +t.dataset.i;
   const listKey = tab === 'clb' ? 'clb' : 'banTin';
-  if (act === 'close') { location.href = '/top'; return; }
+  if (act === 'close') { location.hash = ''; return; }
   if (act === 'logout') { try { await api('/api/dang-xuat', { method: 'POST' }); } catch (x) {} saveToken(null); data = null; render(); return; }
   if (act === 'cancel') { editing = null; render(); return; }
   if (act === 'new') { editing = { kind: tab === 'clb' ? 'clb' : 'tin', isNew: true, item: tab === 'clb' ? { loc: [] } : { nhom: 'pt', trangThai: 'done' } }; render(); return; }
