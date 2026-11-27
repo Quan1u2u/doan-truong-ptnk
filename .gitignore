@@ -1,4 +1,7 @@
-server/data/
+node_modules/
+.wrangler/
+.dev.vars
 __pycache__/
 *.tmp
 server/seed/don-hang.json
+server/seed/quan-tri.json
