@@ -277,6 +277,35 @@ def validate_merch(m):
 # ---------------------------------------------------------------- ứng dụng
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
+
+# Các URL thân thiện: mỗi mục điều hướng là một pathname riêng, không dùng #anchor.
+PUBLIC = HERE.parent / "public"
+PAGE_ROUTES = {
+    "/": "index.html", "/top": "index.html", "/mo-don": "index.html",
+    "/tien-ich": "index.html", "/bantin": "index.html", "/bch": "index.html",
+    "/clb": "index.html", "/admin": "index.html",
+    "/tin-tuc": "tin-tuc.html", "/merch": "merch.html",
+}
+
+@app.get("/")
+@app.get("/top")
+@app.get("/mo-don")
+@app.get("/tien-ich")
+@app.get("/bantin")
+@app.get("/bch")
+@app.get("/clb")
+@app.get("/admin")
+@app.get("/tin-tuc")
+@app.get("/merch")
+def serve_page(request: Request):
+    name = PAGE_ROUTES.get(request.url.path)
+    if not name:
+        raise HTTPException(404, "Không tìm thấy trang")
+    file = PUBLIC / name
+    if not file.is_file():
+        raise HTTPException(404, "Không tìm thấy trang")
+    return FileResponse(file)
+
 @app.middleware("http")
 async def headers(req: Request, call_next):
     if req.method in ("PUT", "POST", "PATCH"):
