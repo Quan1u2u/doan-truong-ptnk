@@ -12,7 +12,7 @@ run_worker_first = ["/api/*", "/up/*", "/", "/top", "/mo-don", "/tien-ich", "/ba
 [[d1_databases]]
 binding = "DB"
 database_name = "doan-ptnk"
-database_id = "THAY-BANG-ID-SAU-KHI-TAO-D1"
+database_id = "d4ad5ee0-c593-4951-88f7-173349182abb"
 
 [[r2_buckets]]
 binding = "UP"
