@@ -1,18 +1,28 @@
 /**
- * Nhận đơn Merch từ website Đoàn trường PTNK và ghi vào Google Sheet.
+ * Cầu nối giữa website Đoàn trường PTNK (Cloudflare Worker) và tài khoản Google của BCH.
+ * Một địa chỉ /exec làm bốn việc:
+ *   1. "don"      ghi đơn Merch vào Google Sheet (mỗi đơn một dòng, tìm theo Mã đơn)
+ *   2. "luu-anh" / "lay-anh"   lưu và đọc ảnh trong Google Drive (thư mục "Web Đoàn PTNK/anh")
+ *   3. "gui-mail" gửi email xác nhận đơn bằng Gmail của tài khoản này
+ *   4. "sao-luu"  lưu bản sao lưu JSON hằng ngày (thư mục "Web Đoàn PTNK/sao-luu", giữ 30 bản mới nhất)
  *
  * Cách cài (làm một lần, bằng tài khoản Google của BCH):
  * 1. Tạo một Google Sheet mới, vào Tiện ích mở rộng → Apps Script.
  * 2. Xoá code mẫu, dán toàn bộ file này vào, sửa KHOA bên dưới cho giống
- *    "Khoá bảo mật" hiện trong trang quản trị website (tab Merch → Google Sheet).
+ *    "Khoá bảo mật" hiện trong trang quản trị website (tab Merch → Google).
  * 3. Bấm Triển khai → Tùy chọn triển khai mới → Loại: Ứng dụng web.
  *    Thực thi với tư cách: Tôi. Người có quyền truy cập: Bất kỳ ai.
- * 4. Cấp quyền, chép "URL ứng dụng web" (đuôi /exec) dán vào trang quản trị rồi bấm Lưu.
+ * 4. Cấp quyền (Sheet, Drive, Gmail), chép "URL ứng dụng web" (đuôi /exec) dán vào trang quản trị rồi bấm Lưu.
  *
- * Mỗi đơn là một dòng, tìm theo Mã đơn: đơn mới thì thêm dòng, đơn đã có thì cập nhật dòng cũ.
+ * Khi sửa file này: Triển khai → Quản lý bản triển khai → biểu tượng bút chì → Phiên bản: Mới → Triển khai.
+ * (URL giữ nguyên.) Nếu Google hỏi quyền mới thì cấp lại.
+ *
+ * Hạn mức Gmail: khoảng 100 email/ngày với tài khoản @gmail.com, 1500/ngày với Google Workspace.
  */
 const KHOA = 'DAN-KHOA-BAO-MAT-VAO-DAY';
 const TEN_TRANG = 'Đơn merch';
+const THU_MUC_GOC = 'Web Đoàn PTNK';
+const GIU_BAN_SAO_LUU = 30;
 const COT = [
   ['ma', 'Mã đơn'], ['luc', 'Thời gian đặt'], ['baoTT', 'Báo chuyển khoản lúc'], ['trangThai', 'Trạng thái'],
   ['hoTen', 'Họ và tên'], ['doiTuong', 'Bạn đến từ'], ['lop', 'Lớp'], ['mshs', 'MSHS'],
@@ -24,6 +34,22 @@ function doPost(e) {
   let body;
   try { body = JSON.parse(e.postData.contents); } catch (x) { return tra({ ok: false, loi: 'Dữ liệu không hợp lệ' }); }
   if (!body || body.khoa !== KHOA) return tra({ ok: false, loi: 'Sai khoá bảo mật' });
+  try {
+    switch (body.hanh || 'don') {
+      case 'don': return ghiDon(body);
+      case 'luu-anh': return luuAnh(body);
+      case 'lay-anh': return layAnh(body);
+      case 'gui-mail': return guiMail(body);
+      case 'sao-luu': return saoLuu(body);
+      default: return tra({ ok: false, loi: 'Thao tác không hỗ trợ' });
+    }
+  } catch (x) {
+    return tra({ ok: false, loi: String(x && x.message || x).slice(0, 200) });
+  }
+}
+
+/* ---------- 1. Google Sheet ---------- */
+function ghiDon(body) {
   const ds = Array.isArray(body.don) ? body.don : [];
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -50,8 +76,65 @@ function doPost(e) {
   }
 }
 
+/* ---------- 2. Google Drive: ảnh ---------- */
+function layHoacTao_(cha, ten) {
+  const it = cha.getFoldersByName(ten);
+  return it.hasNext() ? it.next() : cha.createFolder(ten);
+}
+function thuMuc_(ten) {
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty('THU_MUC_' + ten);
+  if (id) { try { return DriveApp.getFolderById(id); } catch (x) { /* thư mục đã bị xoá: tạo lại */ } }
+  const f = layHoacTao_(layHoacTao_(DriveApp.getRootFolder(), THU_MUC_GOC), ten);
+  props.setProperty('THU_MUC_' + ten, f.getId());
+  return f;
+}
+function tenAnhHopLe_(ten) { return typeof ten === 'string' && /^[a-f0-9]{16,64}\.webp$/.test(ten); }
+
+function luuAnh(body) {
+  if (!tenAnhHopLe_(body.ten)) return tra({ ok: false, loi: 'Tên ảnh không hợp lệ' });
+  const loai = ['image/webp', 'image/png', 'image/jpeg'].indexOf(body.loai) >= 0 ? body.loai : 'image/webp';
+  const f = thuMuc_('anh');
+  if (!f.getFilesByName(body.ten).hasNext()) {          // tên là mã băm nội dung nên trùng tên = trùng ảnh
+    f.createFile(Utilities.newBlob(Utilities.base64Decode(String(body.data || '')), loai, body.ten));
+  }
+  return tra({ ok: true });
+}
+function layAnh(body) {
+  if (!tenAnhHopLe_(body.ten)) return tra({ ok: false, loi: 'Tên ảnh không hợp lệ' });
+  const it = thuMuc_('anh').getFilesByName(body.ten);
+  if (!it.hasNext()) return tra({ ok: false, loi: 'Không có ảnh' });
+  const file = it.next();
+  return tra({ ok: true, loai: file.getMimeType(), data: Utilities.base64Encode(file.getBlob().getBytes()) });
+}
+
+/* ---------- 3. Gmail ---------- */
+function guiMail(body) {
+  const den = String(body.den || '');
+  if (!/^[^@\s<>]+@[^@\s<>]+\.[a-z]{2,}$/i.test(den) || den.length > 120) return tra({ ok: false, loi: 'Email người nhận không hợp lệ' });
+  const opt = { name: 'Đoàn trường PTNK', htmlBody: String(body.html || '') };
+  if (/^[^@\s<>]+@[^@\s<>]+\.[a-z]{2,}$/i.test(String(body.traLoi || ''))) opt.replyTo = body.traLoi;
+  MailApp.sendEmail(den, String(body.tieuDe || 'Đoàn trường PTNK').slice(0, 200), String(body.noiDung || ''), opt);
+  return tra({ ok: true });
+}
+
+/* ---------- 4. Sao lưu ---------- */
+function saoLuu(body) {
+  const ngay = Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'yyyy-MM-dd');
+  const ten = 'sao-luu-' + ngay + '.json';
+  const noiDung = JSON.stringify({ luc: new Date().toISOString(), noiDung: body.noiDung, donHang: body.donHang }, null, 1);
+  const f = thuMuc_('sao-luu');
+  const it = f.getFilesByName(ten);
+  if (it.hasNext()) it.next().setContent(noiDung); else f.createFile(ten, noiDung, MimeType.PLAIN_TEXT);
+  const tatCa = [];
+  const ds = f.getFiles();
+  while (ds.hasNext()) { const x = ds.next(); tatCa.push([x.getName(), x]); }
+  tatCa.sort((a, b) => (a[0] < b[0] ? 1 : -1)).slice(GIU_BAN_SAO_LUU).forEach(p => p[1].setTrashed(true));
+  return tra({ ok: true, ten: ten });
+}
+
 function doGet() {
-  return tra({ ok: true, ten: 'Nhận đơn Merch Đoàn trường PTNK' });
+  return tra({ ok: true, ten: 'Cầu nối website Đoàn trường PTNK với Google' });
 }
 
 function tra(obj) {

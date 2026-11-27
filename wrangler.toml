@@ -1,0 +1,19 @@
+name = "doan-truong-ptnk"
+main = "worker/index.js"
+compatibility_date = "2025-11-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+html_handling = "none"
+# Chỉ các đường dẫn này đi qua Worker; file tĩnh (css, js, ảnh) do Cloudflare phục vụ trực tiếp
+run_worker_first = ["/api/*", "/up/*", "/", "/top", "/mo-don", "/tien-ich", "/bantin", "/bch", "/clb", "/admin", "/tin-tuc", "/merch"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "doan-ptnk"
+database_id = "746044fa-b931-4103-bde7-3891374e17f8"
+
+# Sao lưu hằng ngày lúc 03:00 (giờ Việt Nam) lên Google Drive
+[triggers]
+crons = ["0 20 * * *"]

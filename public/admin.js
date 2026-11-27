@@ -56,6 +56,21 @@ async function save(msg = 'Đã lưu và cập nhật lên web') {
   finally { busy = false; }
 }
 
+
+/* Thu nhỏ và đổi ảnh sang WebP ngay trên trình duyệt (máy chủ Cloudflare không có thư viện xử lý ảnh) */
+async function toWebp(file, loai) {
+  const maxw = loai === 'clb' ? 256 : 1000;
+  let bmp;
+  try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }); }
+  catch (e) { throw new Error('Chỉ nhận ảnh JPG, PNG, WebP'); }
+  const w = Math.min(bmp.width, maxw), h = Math.max(1, Math.round(bmp.height * w / bmp.width));
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  c.getContext('2d').drawImage(bmp, 0, 0, w, h);
+  const blob = await new Promise(r => c.toBlob(r, 'image/webp', loai === 'qr' ? 1 : 0.82));
+  if (!blob || blob.type !== 'image/webp') throw new Error('Trình duyệt này không chuyển được ảnh sang WebP, hãy dùng Chrome, Edge hoặc Firefox');
+  return blob;
+}
+
 /* ---------- tiện ích form ---------- */
 const field = (name, label, val = '', o = {}) => {
   const id = 'adm-' + name;
@@ -70,7 +85,7 @@ const imgField = (name, label, val, loai) => `<div class="adm-f wide adm-img" da
   <div class="adm-imgrow"><div class="adm-prev">${val ? `<img src="${esc(G().imgUrl(val))}" alt="">` : '<em>Chưa có ảnh</em>'}</div>
   <div><label class="adm-btn ghost adm-up">Chọn ảnh từ máy<input type="file" accept="image/jpeg,image/png,image/webp" hidden></label>
   ${val ? '<button type="button" class="adm-btn ghost adm-clearimg">Bỏ ảnh</button>' : ''}
-  <small>JPG, PNG hoặc WebP, tối đa 8 MB. Ảnh sẽ tự thu nhỏ.</small></div></div>
+  <small>JPG, PNG hoặc WebP. Ảnh sẽ tự thu nhỏ khi tải lên.</small></div></div>
   <input type="hidden" name="${name}" value="${esc(val)}"></div>`;
 
 const toVNDate = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? `Đăng ${m[3]}/${m[2]}/${m[1]}` : ''; };
@@ -250,9 +265,11 @@ function viewMerch() {
         <small>${esc(o.sdt)}${o.email ? ' · ' + esc(o.email) : ''} · ${esc(o.luc.replace('T', ' ').slice(0, 16))}</small>
         <small>${o.items.map(it => `${esc([it.ten, it.tuyChon, it.size && 'size ' + it.size].filter(Boolean).join(' · '))} × ${it.sl}`).join('; ')} → <b>${vnd(o.tongTien)}</b></small>
         ${o.ghiChu ? `<small>Ghi chú: ${esc(o.ghiChu)}</small>` : ''}
+        ${o.emailXN ? `<small>Email xác nhận: ${o.emailXN.startsWith('loi') ? 'lỗi (' + esc(o.emailXN.slice(5)) + ')' : o.emailXN === 'dang-gui' ? 'đang gửi' : 'đã gửi lúc ' + esc(o.emailXN.replace('T', ' ').slice(0, 16))}</small>` : ''}
         ${o.baoTT ? `<small>Báo chuyển khoản lúc ${esc(o.baoTT.replace('T', ' ').slice(0, 16))} · Sheet: ${o.sheet === 'ok' ? 'đã ghi' : esc(o.sheet || 'chưa ghi')}</small>` : ''}</div>
         <div class="adm-rbtn">
           <select data-od="${esc(o.ma)}" aria-label="Trạng thái đơn ${esc(o.ma)}">${Object.entries(TT).map(([k, v]) => `<option value="${k}" ${k === o.trangThai ? 'selected' : ''}>${v}</option>`).join('')}</select>
+          ${o.email && o.trangThai !== 'huy' ? `<button type="button" class="adm-btn ghost sm" data-act="od-mail" data-ma="${esc(o.ma)}">Gửi email xác nhận</button>` : ''}
           <button type="button" class="adm-btn danger sm" data-act="od-del" data-ma="${esc(o.ma)}">Xoá</button>
         </div></li>`).join('') || '<li class="adm-note">Chưa có đơn nào.</li>'}</ul>`;
   }
@@ -287,22 +304,23 @@ function viewMerch() {
   </form>
   <div class="adm-form"><div class="adm-head2"><h3>Sản phẩm</h3><button class="adm-btn" type="button" data-act="sp-new">+ Thêm sản phẩm</button></div><ul class="adm-list">${spRows}</ul></div>
   <form class="adm-form" id="adm-sheet">
-    <h3>Google Sheet nhận đơn</h3>
-    <p class="adm-note">Khi người mua bấm "Tôi đã thanh toán", đơn được ghi lên Google Sheet. Đổi trạng thái đơn ở đây thì dòng trên Sheet cũng cập nhật. Cách cài: xem mục Google Sheet trong file hướng dẫn chỉnh sửa (dùng file <code>apps-script/don-merch.gs</code>).</p>
+    <h3>Kết nối Google (Sheet, Drive, Gmail)</h3>
+    <p class="adm-note">Một Google Apps Script (file <code>apps-script/don-merch.gs</code>) làm ba việc: ghi đơn lên Google Sheet khi người mua bấm "Tôi đã thanh toán", lưu ảnh tải lên và bản sao lưu hằng ngày vào Google Drive của BCH, và tự gửi email xác nhận cho người mua khi đơn chuyển sang "Đã xác nhận" hoặc "Đã nhận tiền" (mỗi đơn một lần).</p>
     ${!sheet ? '<p class="adm-note">Đang tải…</p>' : `<div class="adm-grid">
       ${field('url', 'URL ứng dụng web Apps Script (đuôi /exec)', sheet.url, { type: 'url', wide: 1, ph: 'https://script.google.com/macros/s/.../exec' })}
     </div>
     <p class="adm-note">Trạng thái: ${sheet.url ? 'đã kết nối' : 'chưa kết nối'}${sheet.coKhoa ? ' · đã có khoá bảo mật' : ''}.</p>
     <div class="adm-actions"><button class="adm-btn" type="submit">Lưu kết nối Sheet</button>
       <button class="adm-btn ghost" type="button" data-act="sh-khoa" ${sheet.coKhoa ? '' : 'disabled'}>Xem khoá bảo mật</button>
-      <button class="adm-btn ghost" type="button" data-act="sh-sync" ${sheet.url ? '' : 'disabled'}>Ghi lại toàn bộ đơn lên Sheet</button></div>
+      <button class="adm-btn ghost" type="button" data-act="sh-sync" ${sheet.url ? '' : 'disabled'}>Ghi lại toàn bộ đơn lên Sheet</button>
+      <button class="adm-btn ghost" type="button" data-act="sh-bk" ${sheet.url ? '' : 'disabled'}>Sao lưu lên Drive ngay</button></div>
     <p class="adm-note" id="sh-khoa-out"></p>`}
   </form>
   <div class="adm-form"><h3>Đơn đặt</h3>${od}</div>`;
 }
 
 function render() {
-  const open = location.pathname.replace(/\\/$/, '') === '/admin';
+  const open = location.pathname.replace(/\/$/, '') === '/admin';
   document.documentElement.classList.toggle('adm-open', open);
   if (!open) { root.innerHTML = ''; return; }
   if (!token) {
@@ -351,6 +369,18 @@ root.addEventListener('click', async e => {
     try { const r = await api('/api/sheet/dong-bo', { method: 'POST', body: '{}' }); toast(r.thongBao || 'Đã ghi lên Sheet'); orders = null; render(); }
     catch (x) { toast(x.message, true); t.disabled = false; }
     return;
+  }
+  if (act === 'sh-bk') {
+    t.disabled = true;
+    try { const r = await api('/api/sheet/sao-luu', { method: 'POST', body: '{}' }); toast(r.thongBao || 'Đã sao lưu lên Drive'); }
+    catch (x) { toast(x.message, true); }
+    t.disabled = false; return;
+  }
+  if (act === 'od-mail') {
+    t.disabled = true;
+    try { const r = await api(`/api/don-hang/${encodeURIComponent(t.dataset.ma)}/gui-mail`, { method: 'POST', body: '{}' }); toast(r.thongBao || 'Đã gửi email'); }
+    catch (x) { toast(x.message, true); }
+    orders = null; render(); return;
   }
   if (act === 'od-csv') {
     const q = v => { let x = String(v ?? ''); if (/^[=+\-@\t\r]/.test(x)) x = "'" + x; return `"${x.replace(/"/g, '""')}"`; }; // chặn chèn công thức Excel
@@ -412,11 +442,12 @@ root.addEventListener('change', async e => {
   }
   if (inp.type !== 'file' || !inp.files[0]) return;
   const box = inp.closest('[data-img]'), file = inp.files[0];
-  if (file.size > 8e6) { toast('Ảnh tối đa 8 MB', true); return; }
+  if (file.size > 8e6) { toast('Ảnh gốc tối đa 8 MB', true); return; }
   const prev = box.querySelector('.adm-prev');
   prev.innerHTML = '<em>Đang tải ảnh lên…</em>';
-  const b64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
   try {
+    const blob = await toWebp(file, box.dataset.loai);
+    const b64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
     const out = await api('/api/anh', { method: 'POST', body: JSON.stringify({ data: b64, loai: box.dataset.loai }) });
     box.querySelector('input[type=hidden]').value = out.anh;
     prev.innerHTML = `<img src="${esc(G().imgUrl(out.anh))}" alt="">`;
@@ -510,7 +541,7 @@ root.addEventListener('submit', async e => {
   }
 });
 
-addEventListener('keydown', e => { if (e.key === 'Escape' && location.pathname.replace(/\\/$/, '') === '/admin' && !editing) location.href = '/top'; });
-if (document.readyState === 'loading') addEventListener('DOMContentLoaded', () => { if (location.pathname.replace(/\\/$/, '') === '/admin') render(); });
-else if (location.pathname.replace(/\\/$/, '') === '/admin') render();
+addEventListener('keydown', e => { if (e.key === 'Escape' && location.pathname.replace(/\/$/, '') === '/admin' && !editing) location.href = '/top'; });
+if (document.readyState === 'loading') addEventListener('DOMContentLoaded', () => { if (location.pathname.replace(/\/$/, '') === '/admin') render(); });
+else if (location.pathname.replace(/\/$/, '') === '/admin') render();
 })();
