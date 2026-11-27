@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="theme-color" content="#1b5fd9">
+<meta name="api-base" content="">
+<meta name="description" content="Merch PTNK của Đoàn trường Phổ thông Năng khiếu, ĐHQG-HCM: sweater, túi tote, lanyard, capybara, keyring.">
+<title>Merch PTNK | Đoàn trường Phổ thông Năng khiếu</title>
+<link rel="icon" href="./favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./assets/favicon-192.png">
+<link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=Dancing+Script:wght@600;700&display=swap&subset=vietnamese" rel="stylesheet">
+<link rel="stylesheet" href="./base.css?v=e19e55ac2a" integrity="sha256-4Z5VrCoRgLe75gB2w8aHotdXvRh11l5xpFKptWQpxuo=" crossorigin="anonymous">
+</head>
+<body>
+
+<header class="topbar" id="top">
+  <div class="wrap bar">
+    <a class="brand" href="/top" aria-label="Về trang chủ">
+      <img src="./assets/nhan-dien-doan.png" alt="Biểu trưng Trường Phổ thông Năng khiếu, Đoàn TNCS Hồ Chí Minh và Ban Chấp hành Đoàn trường">
+      <span class="brandtext">Đoàn trường PTNK<small>Ban Chấp hành · Nhiệm kỳ 2026–2027</small></span>
+    </a>
+    <nav aria-label="Điều hướng chính">
+      <a href="/mo-don">Đang mở đơn</a>
+      <a href="/tien-ich">Tra cứu</a>
+      <a href="/tin-tuc">Bản tin</a>
+      <a href="/bch">Ban Chấp hành</a>
+      <a href="/clb">CLB</a>
+      <a href="/merch" aria-current="page">Merch</a>
+    </nav>
+    <a class="msg" href="https://m.me/BanChapHanhDoanTruongPhoThongNangKhieu">Nhắn tin BCH</a>
+  </div>
+</header>
+
+<main>
+  <section class="merch wrap merchpage" id="merch" data-merch data-page>
+    <p class="crumb"><a href="/top">Trang chủ</a> <span aria-hidden="true">/</span> Merch</p>
+    <div class="sechead">
+      <div>
+        <p class="eyebrow">Merch Đoàn trường · #xanhtrắng</p>
+        <h1 id="mc-tieude">Merch PTNK</h1>
+        <p class="secsub" id="mc-mota"></p>
+        <p class="mc-status" id="mc-status" hidden></p>
+      </div>
+    </div>
+    <p class="mc-closed" id="mc-closed" hidden></p>
+    <div class="mc-pending" id="mc-pending" hidden>
+      <p>Bạn có đơn <b id="mc-pending-ma"></b> chưa báo thanh toán.</p>
+      <button type="button" class="btn primary" id="mc-pending-go">Tiếp tục thanh toán</button>
+    </div>
+    <div class="shop" id="mc-shop">
+      <ul class="mc-grid" id="mc-list"></ul>
+      <aside class="cart" id="mc-cart" aria-label="Giỏ hàng" hidden>
+        <div class="cart-head"><h2>Giỏ hàng</h2><button type="button" class="cart-x" id="mc-cart-x" aria-label="Đóng giỏ hàng">×</button></div>
+        <ul class="cart-list" id="mc-cart-list"></ul>
+        <p class="cart-empty" id="mc-cart-empty">Giỏ hàng đang trống. Chọn mẫu, size rồi bấm "Thêm vào giỏ".</p>
+        <div class="cart-foot">
+          <div class="mc-sum"><span id="mc-sum-sl">0 món</span><b id="mc-sum-tien">0đ</b></div>
+          <p class="mc-sub" id="mc-toida"></p>
+          <button type="button" class="btn primary cart-go" id="mc-checkout" disabled>Đặt hàng</button>
+          <p class="mc-sub">Nhận trực tiếp tại Văn phòng Đoàn, không giao hàng tận nơi.</p>
+        </div>
+      </aside>
+    </div>
+    <button type="button" class="cartbar" id="mc-cartbar" hidden><span>Giỏ hàng · <b id="mc-bar-sl">0 món</b></span><b id="mc-bar-tien">0đ</b></button>
+    <p class="mc-toast" id="mc-toast" role="status" aria-live="polite"></p>
+  </section>
+</main>
+
+<dialog class="mc-dlg" id="mc-dlg" aria-labelledby="mc-dlg-t">
+  <div class="dlg-head">
+    <ol class="steps" aria-label="Các bước đặt hàng"><li data-step="info">Thông tin</li><li data-step="pay">Thanh toán</li><li data-step="done">Hoàn tất</li></ol>
+    <button type="button" class="cart-x" id="mc-dlg-x" aria-label="Đóng">×</button>
+  </div>
+
+  <form id="mc-form" class="dlg-step" data-step="info" novalidate>
+    <h2 id="mc-dlg-t">Thông tin nhận hàng</h2>
+    <div class="mc-fields">
+      <label class="wide">Họ và tên *<input name="hoTen" autocomplete="name" maxlength="80" required></label>
+      <label>Bạn đến từ *<select name="doiTuong" id="mc-doituong" required></select></label>
+      <label>Số điện thoại *<input name="sdt" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" required></label>
+      <label data-hs>Lớp *<input name="lop" maxlength="30" placeholder="Ví dụ: 11 Toán"></label>
+      <label data-hs>Mã số học sinh (MSHS) *<input name="mshs" inputmode="numeric" maxlength="8" placeholder="Ví dụ: 250231"></label>
+      <label class="wide">Email *<input name="email" type="email" autocomplete="email" maxlength="120" required><small>Ban Chấp hành gửi xác nhận đơn và lịch nhận hàng qua email này.</small></label>
+    </div>
+    <fieldset class="mc-coso"><legend>Nhận hàng tại *</legend><div id="mc-coso"></div></fieldset>
+    <label class="mc-note">Ghi chú<textarea name="ghiChu" rows="2" maxlength="400" placeholder="Ví dụ: đặt chung với bạn cùng lớp"></textarea></label>
+    <label class="mc-hp" aria-hidden="true">Website<input name="web" tabindex="-1" autocomplete="off"></label>
+    <div class="dlg-sum"><p class="mc-linesh">Đơn của bạn</p><ul id="mc-review"></ul><div class="mc-sum"><span id="mc-rv-sl"></span><b id="mc-rv-tien"></b></div></div>
+    <p class="mc-msg" id="mc-msg" role="alert"></p>
+    <div class="dlg-btns"><button type="button" class="btn line" data-close>Quay lại giỏ hàng</button><button type="submit" class="btn primary" id="mc-submit">Đặt hàng và thanh toán</button></div>
+    <p class="mc-sub" id="mc-ghichu"></p>
+    <p class="mc-sub">Thông tin của bạn chỉ dùng để Ban Chấp hành xác nhận đơn và trả hàng.</p>
+  </form>
+
+  <section class="dlg-step" data-step="pay" hidden aria-labelledby="mc-pay-t">
+    <h2 id="mc-pay-t">Thanh toán đơn <span id="mc-pay-ma"></span></h2>
+    <p class="mc-sub">Mở app ngân hàng, quét mã QR hoặc chuyển khoản theo thông tin dưới đây. Ghi đúng nội dung chuyển khoản để BCH đối soát.</p>
+    <div class="pay">
+      <figure class="pay-qr" id="mc-qr"></figure>
+      <dl class="pay-info" id="mc-payinfo"></dl>
+    </div>
+    <p class="mc-sub" id="mc-huongdan"></p>
+    <p class="mc-msg" id="mc-pay-msg" role="alert"></p>
+    <div class="dlg-btns"><button type="button" class="btn line" data-close>Thanh toán sau</button><button type="button" class="btn primary" id="mc-paid">Tôi đã thanh toán</button></div>
+  </section>
+
+  <section class="dlg-step" data-step="done" hidden aria-labelledby="mc-done-t">
+    <h2 id="mc-done-t">Đã ghi nhận đơn <span id="mc-done-ma"></span></h2>
+    <p id="mc-done-txt"></p>
+    <div class="dlg-btns"><button type="button" class="btn primary" data-close>Xong</button></div>
+  </section>
+</dialog>
+
+<footer class="foot" id="lienhe">
+  <div class="wrap footgrid">
+    <div>
+      <p class="eyebrow light">Liên hệ Ban Chấp hành</p>
+      <h2 data-vb="lienHeTieuDe">Mọi thắc mắc, gửi cho BCH nhé</h2>
+      <p class="muted" data-vb="lienHeMoTa">Liên hệ Ban Chấp hành Đoàn trường qua email hoặc Messenger của fanpage.</p>
+    </div>
+    <ul class="contacts">
+      <li><span>Email</span><a id="lh-email" href="mailto:doanthanhnien@ptnk.edu.vn">doanthanhnien@ptnk.edu.vn</a></li>
+      <li><span>Messenger</span><a id="lh-messenger" href="https://m.me/BanChapHanhDoanTruongPhoThongNangKhieu">Nhắn tin cho BCH ↗</a></li>
+      <li><span>Fanpage</span><a id="lh-fanpage" href="https://www.facebook.com/BanChapHanhDoanTruongPhoThongNangKhieu">Đoàn trường PTNK ↗</a></li>
+    </ul>
+  </div>
+  <div class="wrap credits">
+    <p data-vb="credits">Website do Ban Chấp hành Đoàn trường Phổ thông Năng khiếu, ĐHQG-HCM vận hành. Nội dung và hình ảnh lấy từ fanpage Đoàn trường.</p>
+    <p class="refs"><a class="adminlink" href="/admin">Quản trị</a> · Tham khảo thêm: <a href="https://ptnk.edu.vn/">Website trường PTNK</a> · <a href="https://www.facebook.com/HSGVNUHCM/">Fanpage trường PTNK</a></p>
+  </div>
+</footer>
+
+<script src="./noi-dung.js?v=64d1c20a52" integrity="sha256-ZNHCClKhZaP4GpOAbimlPVIRw4Yf6tmw0FwRIVDcX+c=" crossorigin="anonymous"></script>
+<script src="./app.js?v=8a63764649" integrity="sha256-imN2RknktMwF/qe1sxIycGgVEnYY/Lf147LjO87Xnuw=" crossorigin="anonymous"></script>
+</body>
+</html>
