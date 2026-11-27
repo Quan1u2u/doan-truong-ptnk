@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: doan-truong-ptnk
+    runtime: python
+    plan: starter
+    region: singapore
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server.app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/noi-dung
+    envVars:
+      - key: DEV_STATIC
+        value: "1"
+      - key: DATA_DIR
+        value: /var/data
+    disk:
+      name: doan-ptnk-data
+      mountPath: /var/data
+      sizeGB: 1

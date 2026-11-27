@@ -1,0 +1,9 @@
+{
+ "mat_khau": {
+  "thuat_toan": "pbkdf2-sha256",
+  "vong": 310000,
+  "muoi": "576bf8445164360bbf526aa70a72af46",
+  "bam": "25ecde03e6e78fec0488ab95a4757e92fbd5c2208fe7a814a18172a2d7c40e38"
+ },
+ "agent_bam": "f14cae50c6a92d9e281956ccbc39575f5aee5237856ac893ed2114caead3c607"
+}
