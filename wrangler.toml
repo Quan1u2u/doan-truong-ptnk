@@ -1,4 +1,4 @@
-name = "doan-truong-ptnk"
+name = "doantruongptnk"
 main = "worker/index.js"
 compatibility_date = "2025-11-01"
 
