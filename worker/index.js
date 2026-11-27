@@ -552,6 +552,16 @@ async function api(req, env, ctx, p) {
       anh, donHang: await allOrders(env) });
   }
 
+  // Chẩn đoán cấu hình: chỉ trả về có/không, không lộ giá trị nào. Có thể xoá sau khi đăng nhập được.
+  if (p === "/api/cau-hinh" && m === "GET") {
+    return json({
+      adminPassword: !!env.ADMIN_PASSWORD,
+      agentKey: !!env.AGENT_KEY,
+      db: await env.DB.prepare("SELECT 1 FROM kv LIMIT 1").first().then(() => true).catch(() => false),
+      daCoMatKhauTrongDb: await env.DB.prepare("SELECT 1 FROM kv WHERE k = 'auth'").first().then(r => !!r).catch(() => false),
+    });
+  }
+
   throw new HttpError(404, "Không tìm thấy");
 }
 
