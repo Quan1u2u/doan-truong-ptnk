@@ -1,4 +1,4 @@
-// Trang quản trị: mở trực tiếp tại /admin
+// Trang quản trị: mở bằng đường dẫn .../#admin
 (() => {
 const root = document.getElementById('admin-root');
 if (!root) return;
@@ -54,21 +54,6 @@ async function save(msg = 'Đã lưu và cập nhật lên web') {
     return true;
   } catch (e) { toast(e.message, true); return false; }
   finally { busy = false; }
-}
-
-
-/* Thu nhỏ và đổi ảnh sang WebP ngay trên trình duyệt (máy chủ Cloudflare không có thư viện xử lý ảnh) */
-async function toWebp(file, loai) {
-  const maxw = loai === 'clb' ? 256 : 1000;
-  let bmp;
-  try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }); }
-  catch (e) { throw new Error('Chỉ nhận ảnh JPG, PNG, WebP'); }
-  const w = Math.min(bmp.width, maxw), h = Math.max(1, Math.round(bmp.height * w / bmp.width));
-  const c = document.createElement('canvas'); c.width = w; c.height = h;
-  c.getContext('2d').drawImage(bmp, 0, 0, w, h);
-  const blob = await new Promise(r => c.toBlob(r, 'image/webp', loai === 'qr' ? 1 : 0.82));
-  if (!blob || blob.type !== 'image/webp') throw new Error('Trình duyệt này không chuyển được ảnh sang WebP, hãy dùng Chrome, Edge hoặc Firefox');
-  return blob;
 }
 
 /* ---------- tiện ích form ---------- */
@@ -317,7 +302,7 @@ function viewMerch() {
 }
 
 function render() {
-  const open = location.pathname.replace(/\/$/, '') === '/admin';
+  const open = location.hash === '#admin';
   document.documentElement.classList.toggle('adm-open', open);
   if (!open) { root.innerHTML = ''; return; }
   if (!token) {
@@ -348,7 +333,7 @@ root.addEventListener('click', async e => {
   if (t.dataset.tab) { tab = t.dataset.tab; editing = null; if (tab === 'merch') { orders = null; sheet = null; } render(); return; }
   const act = t.dataset.act, i = +t.dataset.i;
   const listKey = tab === 'clb' ? 'clb' : 'banTin';
-  if (act === 'close') { location.href = '/top'; return; }
+  if (act === 'close') { location.hash = ''; return; }
   if (act === 'logout') { try { await api('/api/dang-xuat', { method: 'POST' }); } catch (x) {} saveToken(null); data = null; render(); return; }
   if (act === 'cancel') { editing = null; render(); return; }
   if (act === 'new') { editing = { kind: tab === 'clb' ? 'clb' : 'tin', isNew: true, item: tab === 'clb' ? { loc: [] } : { nhom: 'pt', trangThai: 'done' } }; render(); return; }
@@ -430,9 +415,8 @@ root.addEventListener('change', async e => {
   if (file.size > 8e6) { toast('Ảnh tối đa 8 MB', true); return; }
   const prev = box.querySelector('.adm-prev');
   prev.innerHTML = '<em>Đang tải ảnh lên…</em>';
+  const b64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
   try {
-    const blob = await toWebp(file, box.dataset.loai);
-    const b64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
     const out = await api('/api/anh', { method: 'POST', body: JSON.stringify({ data: b64, loai: box.dataset.loai }) });
     box.querySelector('input[type=hidden]').value = out.anh;
     prev.innerHTML = `<img src="${esc(G().imgUrl(out.anh))}" alt="">`;
@@ -526,7 +510,7 @@ root.addEventListener('submit', async e => {
   }
 });
 
-addEventListener('keydown', e => { if (e.key === 'Escape' && location.pathname.replace(/\/$/, '') === '/admin' && !editing) location.href = '/top'; });
-if (document.readyState === 'loading') addEventListener('DOMContentLoaded', () => { if (location.pathname.replace(/\/$/, '') === '/admin') render(); });
-else if (location.pathname.replace(/\/$/, '') === '/admin') render();
+addEventListener('hashchange', render);
+addEventListener('keydown', e => { if (e.key === 'Escape' && location.hash === '#admin' && !editing) location.hash = ''; });
+if (document.readyState === 'loading') addEventListener('DOMContentLoaded', () => { if (location.hash === '#admin') render(); }); else if (location.hash === '#admin') render();
 })();

@@ -4,17 +4,15 @@
     python3 agent-api.py lay > /tmp/nd.json          # tải nội dung hiện tại
     python3 agent-api.py anh <file ảnh> [tin|clb]     # tải ảnh lên, in ra đường dẫn up/<mã>.webp
     python3 agent-api.py dat /tmp/nd.json             # ghi nội dung mới lên web (thay đổi hiện ngay)
-    python3 agent-api.py sao-luu                      # chép nội dung, ảnh và đơn về máy để lưu trữ
+    python3 agent-api.py sao-luu                      # chép dữ liệu đang chạy về server/seed/ để không mất khi publish lại
 
-Biến môi trường: API (bắt buộc, ví dụ https://ten-worker.ten-tai-khoan.workers.dev hoặc domain riêng),
-AGENT_KEY (giá trị đã đặt bằng `wrangler secret put AGENT_KEY`) hoặc AGENT_KEY_FILE (đường dẫn file chứa key).
+Biến môi trường: API (mặc định https://doantruongptnk.pplx.app/port/8000),
+AGENT_KEY_FILE (mặc định /home/user/workspace/.bi-mat/agent-key.txt).
 """
 import base64, json, os, pathlib, sys, urllib.request
 
-API = os.environ.get("API", "").rstrip("/")
-if not API:
-    sys.exit("Thiếu biến môi trường API (địa chỉ website, ví dụ https://ten-worker.workers.dev)")
-KEY = os.environ.get("AGENT_KEY") or pathlib.Path(os.environ.get("AGENT_KEY_FILE", ".bi-mat/agent-key.txt")).read_text().strip()
+API = os.environ.get("API", "https://doantruongptnk.pplx.app/port/8000").rstrip("/")
+KEY = pathlib.Path(os.environ.get("AGENT_KEY_FILE", "/home/user/workspace/.bi-mat/agent-key.txt")).read_text().strip()
 ROOT = pathlib.Path(__file__).resolve().parent
 SEED = ROOT / "server" / "seed"
 
@@ -22,7 +20,7 @@ SEED = ROOT / "server" / "seed"
 def call(method, path, body=None, raw=False):
     data = json.dumps(body, ensure_ascii=False).encode() if body is not None else None
     req = urllib.request.Request(API + path, data=data, method=method,
-                                 headers={"X-Agent-Key": KEY, "Content-Type": "application/json", "User-Agent": "doan-agent/1.0"})
+                                 headers={"X-Agent-Key": KEY, "Content-Type": "application/json", "User-Agent": "doan-agent"})
     with urllib.request.urlopen(req, timeout=60) as r:
         out = r.read()
     return out if raw else json.loads(out)
@@ -46,7 +44,9 @@ def main():
     elif cmd == "sao-luu":
         b = call("GET", "/api/sao-luu")
         (SEED / "noi-dung.json").write_text(json.dumps(b["noiDung"], ensure_ascii=False, indent=1), encoding="utf-8")
-        # b["quanTri"] (hash mật khẩu, khoá Sheet) cố ý KHÔNG lưu vào thư mục dự án để khỏi lộ khi đưa lên git
+        q = json.loads((SEED / "quan-tri.json").read_text(encoding="utf-8"))
+        q.update(b["quanTri"])
+        (SEED / "quan-tri.json").write_text(json.dumps(q, ensure_ascii=False, indent=1), encoding="utf-8")
         # đơn đặt merch: dữ liệu cá nhân, chỉ lưu cục bộ (đã .gitignore, không đưa vào zip)
         (SEED / "don-hang.json").write_text(json.dumps(b.get("donHang", []), ensure_ascii=False, indent=1), encoding="utf-8")
         up = SEED / "up"

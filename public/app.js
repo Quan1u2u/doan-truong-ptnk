@@ -12,7 +12,7 @@ const API = rawBase.startsWith('__PORT_') ? '' : rawBase.replace(/\/$/, '');
 const imgUrl = a => !a ? '' : a.startsWith('up/') ? `${API}/${a}` : `./assets/${a}`;
 window.DOAN = { API, imgUrl, esc, safeUrl };
 
-if (location.pathname === '/merch' && $('[data-merch-teaser]')) location.replace('/merch');
+if (location.hash === '#merch' && $('[data-merch-teaser]')) location.replace('./merch.html');
 let D = window.NOI_DUNG;
 const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase();
 const STATUS = { open: 'Đang mở', done: 'Đã kết thúc' };
@@ -36,7 +36,7 @@ function renderMoDon() {
   if (!sec) return;
   const M = D.moDon || {};
   sec.hidden = M.hien === false;
-  $$('a[href="/mo-don"]').forEach(a => { a.hidden = M.hien === false; });
+  $$('a[href="#mo-don"]').forEach(a => { a.hidden = M.hien === false; });
   $('#md-tieude').textContent = M.tieuDe || '';
   $('#md-mota').textContent = M.moTa || '';
   $('#md-han').textContent = M.hanChotChu || '';
@@ -89,7 +89,7 @@ const HOME = list?.dataset.mode === 'home';
 let cat = new URLSearchParams(location.search).get('nhom') || 'all', limit = 12;
 const card = n => `
       <article class="card c-${esc(n.nhom)}">
-        <a href="${esc(safeUrl(n.link) || '/tin-tuc')}" target="_blank" rel="noopener noreferrer">
+        <a href="${esc(safeUrl(n.link) || '#')}" target="_blank" rel="noopener noreferrer">
           <div class="thumb">${n.anh ? `<img loading="lazy" src="${esc(imgUrl(n.anh))}" alt="">` : '<span class="noimg" aria-hidden="true">Đoàn trường PTNK</span>'}</div>
           <div class="body">
             <div class="meta"><span class="tag">${esc(n.nhan)}</span><span class="st ${esc(n.trangThai)}">${STATUS[n.trangThai] || ''}</span></div>
@@ -230,7 +230,7 @@ function renderMerch() {
   const M = D.merch;
   const show = !!(M && M.hien !== false && (M.sanPham || []).length);
   const onHome = show && M.hienTrangChu !== false;
-  $$('nav a[href="/merch"]:not([aria-current])').forEach(a => { a.hidden = !onHome; });
+  $$('nav a[href="./merch.html"]:not([aria-current])').forEach(a => { a.hidden = !onHome; });
   const tz = $('[data-merch-teaser]');
   if (tz) {
     tz.hidden = !onHome;
@@ -418,19 +418,13 @@ fetch(`${API}/api/noi-dung`, { signal: ctrl.signal, cache: 'no-store' })
 
   .catch(() => {});
 
-/* Điều hướng bằng pathname, không dùng fragment (#...) */
-const routeSections = {
-  '/top': null, '/mo-don': '#mo-don', '/tien-ich': '#tien-ich',
-  '/bantin': '#bantin', '/bch': '#bch', '/clb': '#clb'
-};
-const route = location.pathname.replace(/\/$/, '') || '/top';
-const target = routeSections[route];
-if (Object.prototype.hasOwnProperty.call(routeSections, route)) {
-  requestAnimationFrame(() => {
-    if (target) document.querySelector(target)?.scrollIntoView({ block: 'start' });
-    else window.scrollTo(0, 0);
-  });
+/* Đánh dấu mục đang xem trên thanh điều hướng */
+const nav = $$('nav a').filter(a => a.hash && a.pathname === location.pathname);
+function active() {
+  const y = scrollY + innerHeight * 0.35;
+  let cur = null;
+  for (const a of nav) { const s = document.querySelector(a.hash); if (s && !s.hidden && s.offsetTop <= y) cur = a; }
+  nav.forEach(a => a.classList.toggle('current', a === cur));
 }
-const nav = $$('nav a[href^="/"]');
-nav.forEach(a => a.classList.toggle('current', a.getAttribute('href') === route));
+if (nav.length) { addEventListener('scroll', active, { passive: true }); active(); }
 })();
