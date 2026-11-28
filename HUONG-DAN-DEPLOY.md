@@ -36,11 +36,15 @@ npx wrangler deploy
 Một Google Apps Script (`apps-script/don-merch.gs`) chạy bằng tài khoản Google của BCH và làm bốn việc:
 ghi đơn lên Google Sheet, lưu ảnh và bản sao lưu vào Google Drive (thư mục `Web Đoàn PTNK`), và gửi email xác nhận bằng Gmail.
 
-1. Tạo Google Sheet mới → Tiện ích mở rộng → Apps Script, dán nội dung `apps-script/don-merch.gs`.
+1. Vào script.google.com, tạo dự án mới (hoặc Tiện ích mở rộng → Apps Script trong một Google Sheet bất kỳ), dán nội dung `apps-script/don-merch.gs`.
 2. Đổi `KHOA` thành một chuỗi bí mật dài. Chép đúng chuỗi đó vào ô "Khoá bảo mật" trong trang quản trị (tab Merch → Kết nối Google).
 3. Triển khai → Ứng dụng web (chạy với tư cách: Tôi, quyền truy cập: Bất kỳ ai). Cấp quyền Sheet, Drive, Gmail.
-4. Dán URL `/exec` vào trang quản trị rồi Lưu. Bấm "Sao lưu lên Drive ngay" để thử.
-5. Sửa file `.gs` sau này thì phải Triển khai → Quản lý bản triển khai → Sửa → Phiên bản mới.
+4. Dán URL `/exec` và link Google Sheet nhận đơn vào trang quản trị rồi Lưu. Bấm "Sao lưu lên Drive ngay" để thử.
+5. Sửa file `.gs` sau này thì phải Triển khai → Quản lý bản triển khai → Sửa → Phiên bản mới (URL `/exec` giữ nguyên).
+
+**Đổi sang Google Sheet khác:** chỉ cần đổi ô "Link Google Sheet nhận đơn" trong trang quản trị rồi Lưu, rồi bấm "Ghi lại toàn bộ đơn lên Sheet" nếu muốn chép các đơn cũ sang Sheet mới. Không cần tạo script mới và không phải đổi URL `/exec`. Website gửi kèm ID của Sheet trong mỗi lần ghi đơn. Tài khoản Google chạy script phải có quyền chỉnh sửa Sheet đó. Nếu ô này để trống, script ghi vào Sheet mà nó được gắn vào (cách cũ).
+
+**Nâng cấp từ bản script cũ:** dán lại `don-merch.gs` mới, Triển khai → Quản lý bản triển khai → Sửa → Phiên bản mới, và cấp thêm quyền truy cập Google Sheets khi Google hỏi (mở Sheet theo ID cần quyền rộng hơn quyền "chỉ Sheet hiện tại").
 
 Cách hoạt động:
 - **Ảnh:** bản gốc nằm trong Drive; Worker giữ bản đệm trong D1 để trang tải nhanh. Nếu chưa nối Google, ảnh chỉ nằm trong D1.

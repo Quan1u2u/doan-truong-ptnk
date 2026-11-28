@@ -302,8 +302,19 @@ async function gas(env, payload) {
   if (!out.ok) return [false, "Google từ chối: " + String(out.loi || "không rõ lý do").slice(0, 120), null];
   return [true, "ok", out];
 }
+// Lấy ID Google Sheet từ link (…/spreadsheets/d/<ID>/edit) hoặc từ chính ID. Trả "" nếu để trống, null nếu sai.
+const SHEET_ID_RE = /^[A-Za-z0-9_-]{20,}$/;
+function parseSheetId(v) {
+  v = String(v ?? "").trim();
+  if (!v) return "";
+  const m = v.match(/^https:\/\/docs\.google\.com\/spreadsheets\/(?:u\/\d+\/)?d\/([A-Za-z0-9_-]{20,})(?:[/?#]|$)/);
+  if (m) return m[1];
+  return SHEET_ID_RE.test(v) ? v : null;
+}
+const sheetLink = id => (id ? `https://docs.google.com/spreadsheets/d/${id}/edit` : "");
 async function pushSheet(env, rows) {
-  const [ok, msg, out] = await gas(env, { hanh: "don", don: rows });
+  const cfg = await sheetCfg(env);
+  const [ok, msg, out] = await gas(env, { hanh: "don", don: rows, ...(cfg.sheetId ? { sheetId: cfg.sheetId } : {}) });
   return ok ? [true, `Đã ghi ${out.so ?? rows.length} đơn lên Sheet`] : [false, msg];
 }
 
@@ -509,7 +520,7 @@ async function api(req, env, ctx, p) {
   if (p === "/api/sheet" && m === "GET") {
     await requireAuth(req, env);
     const c = await sheetCfg(env);
-    return json({ url: c.url || "", coKhoa: !!c.khoa });
+    return json({ url: c.url || "", sheetUrl: sheetLink(c.sheetId), coKhoa: !!c.khoa });
   }
   if (p === "/api/sheet" && m === "PUT") {
     await requireAuth(req, env);
@@ -519,6 +530,11 @@ async function api(req, env, ctx, p) {
       throw bad("Link phải có dạng https://script.google.com/macros/s/.../exec");
     const cur = await sheetCfg(env);
     cur.url = u;
+    if (body.sheetUrl !== undefined) {           // không gửi trường này thì giữ nguyên sheet đang dùng
+      const id = parseSheetId(str(body.sheetUrl, 300, "Link Google Sheet"));
+      if (id === null) throw bad("Link Google Sheet phải có dạng https://docs.google.com/spreadsheets/d/.../edit");
+      cur.sheetId = id;
+    }
     const k2 = str(body.khoa, 100, "Khoá Sheet");
     if (k2) cur.khoa = k2;
     if (!cur.khoa) cur.khoa = rndUrl(18);

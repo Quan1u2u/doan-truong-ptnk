@@ -511,12 +511,31 @@ def sheet_row(d):
 def sheet_cfg():
     return (read_json(AUTH_FILE).get("sheet") or {})
 
+SHEET_ID_RE = re.compile(r"^[A-Za-z0-9_-]{20,}$")
+SHEET_LINK_RE = re.compile(r"^https://docs\.google\.com/spreadsheets/(?:u/\d+/)?d/([A-Za-z0-9_-]{20,})(?:[/?#]|$)")
+
+def parse_sheet_id(v):
+    """Lấy ID Google Sheet từ link hoặc từ chính ID. Trả "" nếu để trống, None nếu sai."""
+    v = (v or "").strip()
+    if not v:
+        return ""
+    m = SHEET_LINK_RE.match(v)
+    if m:
+        return m.group(1)
+    return v if SHEET_ID_RE.match(v) else None
+
+def sheet_link(sheet_id):
+    return f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit" if sheet_id else ""
+
 def push_sheet(rows, cfg=None):
     """Gửi danh sách đơn lên Apps Script. Trả (ok, thông báo)."""
     cfg = cfg or sheet_cfg()
     if not cfg.get("url"):
         return False, "Chưa cấu hình Google Sheet"
-    data = json.dumps({"khoa": cfg.get("khoa", ""), "don": rows}, ensure_ascii=False).encode()
+    payload = {"khoa": cfg.get("khoa", ""), "don": rows}
+    if cfg.get("sheetId"):
+        payload["sheetId"] = cfg["sheetId"]   # Apps Script mở đúng sheet này, URL /exec không cần đổi
+    data = json.dumps(payload, ensure_ascii=False).encode()
     rq = urllib.request.Request(cfg["url"], data=data, headers={"Content-Type": "application/json"}, method="POST")
     try:
         with urllib.request.urlopen(rq, timeout=25) as r:
@@ -575,7 +594,7 @@ async def bao_thanh_toan(ma: str, req: Request):
 def xem_sheet(req: Request):
     require_auth(req)
     c = sheet_cfg()
-    return {"url": c.get("url", ""), "coKhoa": bool(c.get("khoa"))}
+    return {"url": c.get("url", ""), "sheetUrl": sheet_link(c.get("sheetId")), "coKhoa": bool(c.get("khoa"))}
 
 @app.put("/api/sheet")
 async def luu_sheet(req: Request):
@@ -584,10 +603,17 @@ async def luu_sheet(req: Request):
     u = s(body.get("url"), 300, "Link Apps Script")
     if u and not re.match(r"^https://script\.google\.com/(a/macros/[a-z0-9.-]+|macros)/s/[A-Za-z0-9_-]{20,}/exec$", u):
         raise HTTPException(400, "Link phải có dạng https://script.google.com/macros/s/.../exec")
+    sid = None
+    if "sheetUrl" in body:                       # không gửi trường này thì giữ nguyên sheet đang dùng
+        sid = parse_sheet_id(s(body.get("sheetUrl"), 300, "Link Google Sheet"))
+        if sid is None:
+            raise HTTPException(400, "Link Google Sheet phải có dạng https://docs.google.com/spreadsheets/d/.../edit")
     with LOCK:
         auth = read_json(AUTH_FILE)
         cur = auth.get("sheet") or {}
         cur["url"] = u
+        if sid is not None:
+            cur["sheetId"] = sid
         k2 = s(body.get("khoa"), 100, "Khoá Sheet")
         if k2:
             cur["khoa"] = k2

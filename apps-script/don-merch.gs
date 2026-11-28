@@ -7,12 +7,18 @@
  *   4. "sao-luu"  lưu bản sao lưu JSON hằng ngày (thư mục "Web Đoàn PTNK/sao-luu", giữ 30 bản mới nhất)
  *
  * Cách cài (làm một lần, bằng tài khoản Google của BCH):
- * 1. Tạo một Google Sheet mới, vào Tiện ích mở rộng → Apps Script.
+ * 1. Vào script.google.com (hoặc Tiện ích mở rộng → Apps Script trong một Google Sheet bất kỳ), tạo dự án.
  * 2. Xoá code mẫu, dán toàn bộ file này vào, sửa KHOA bên dưới cho giống
  *    "Khoá bảo mật" hiện trong trang quản trị website (tab Merch → Google).
  * 3. Bấm Triển khai → Tùy chọn triển khai mới → Loại: Ứng dụng web.
  *    Thực thi với tư cách: Tôi. Người có quyền truy cập: Bất kỳ ai.
  * 4. Cấp quyền (Sheet, Drive, Gmail), chép "URL ứng dụng web" (đuôi /exec) dán vào trang quản trị rồi bấm Lưu.
+ *
+ * Đổi Google Sheet nhận đơn: KHÔNG cần tạo script mới, KHÔNG đổi URL /exec.
+ * Chỉ cần dán link Google Sheet mới vào ô "Link Google Sheet" trong trang quản trị rồi Lưu.
+ * Website gửi kèm ID của sheet trong mỗi lần ghi đơn (trường sheetId), script mở đúng sheet đó.
+ * Tài khoản chạy script phải có quyền chỉnh sửa sheet đó. Nếu website chưa gửi sheetId,
+ * script dùng sheet mà nó được gắn vào (cách cũ), nên bản triển khai cũ vẫn chạy bình thường.
  *
  * Khi sửa file này: Triển khai → Quản lý bản triển khai → biểu tượng bút chì → Phiên bản: Mới → Triển khai.
  * (URL giữ nguyên.) Nếu Google hỏi quyền mới thì cấp lại.
@@ -51,10 +57,19 @@ function doPost(e) {
 /* ---------- 1. Google Sheet ---------- */
 function ghiDon(body) {
   const ds = Array.isArray(body.don) ? body.don : [];
+  const id = String(body.sheetId || '');
+  if (id && !/^[A-Za-z0-9_-]{20,}$/.test(id)) return tra({ ok: false, loi: 'ID Google Sheet không hợp lệ' });
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let ss;
+    if (id) {
+      try { ss = SpreadsheetApp.openById(id); }
+      catch (x) { return tra({ ok: false, loi: 'Không mở được Google Sheet. Kiểm tra link và quyền chỉnh sửa của tài khoản chạy script' }); }
+    } else {
+      ss = SpreadsheetApp.getActiveSpreadsheet();
+      if (!ss) return tra({ ok: false, loi: 'Chưa có link Google Sheet. Dán link vào trang quản trị' });
+    }
     const sh = ss.getSheetByName(TEN_TRANG) || ss.insertSheet(TEN_TRANG);
     if (sh.getLastRow() === 0) {
       sh.appendRow(COT.map(c => c[1]));

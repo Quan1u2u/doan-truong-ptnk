@@ -307,9 +307,10 @@ function viewMerch() {
     <h3>Kết nối Google (Sheet, Drive, Gmail)</h3>
     <p class="adm-note">Một Google Apps Script (file <code>apps-script/don-merch.gs</code>) làm ba việc: ghi đơn lên Google Sheet khi người mua bấm "Tôi đã thanh toán", lưu ảnh tải lên và bản sao lưu hằng ngày vào Google Drive của BCH, và tự gửi email xác nhận cho người mua khi đơn chuyển sang "Đã xác nhận" hoặc "Đã nhận tiền" (mỗi đơn một lần).</p>
     ${!sheet ? '<p class="adm-note">Đang tải…</p>' : `<div class="adm-grid">
-      ${field('url', 'URL ứng dụng web Apps Script (đuôi /exec)', sheet.url, { type: 'url', wide: 1, ph: 'https://script.google.com/macros/s/.../exec' })}
+      ${field('url', 'URL ứng dụng web Apps Script (đuôi /exec)', sheet.url, { type: 'url', wide: 1, ph: 'https://script.google.com/macros/s/.../exec', hint: 'Dán một lần, không cần đổi khi chuyển sang Google Sheet khác.' })}
+      ${field('sheetUrl', 'Link Google Sheet nhận đơn', sheet.sheetUrl, { type: 'url', wide: 1, ph: 'https://docs.google.com/spreadsheets/d/.../edit', hint: 'Muốn ghi đơn sang Sheet khác thì chỉ cần đổi link này rồi Lưu. Tài khoản Google chạy Apps Script phải có quyền chỉnh sửa Sheet đó. Để trống thì dùng Sheet mà script đang gắn vào.' })}
     </div>
-    <p class="adm-note">Trạng thái: ${sheet.url ? 'đã kết nối' : 'chưa kết nối'}${sheet.coKhoa ? ' · đã có khoá bảo mật' : ''}.</p>
+    <p class="adm-note">Trạng thái: ${sheet.url ? 'đã kết nối' : 'chưa kết nối'}${sheet.coKhoa ? ' · đã có khoá bảo mật' : ''}${sheet.sheetUrl ? ' · ghi đơn vào <a href="' + esc(sheet.sheetUrl) + '" target="_blank" rel="noopener">Google Sheet đã chọn</a>' : ' · ghi đơn vào Sheet gắn với script'}.</p>
     <div class="adm-actions"><button class="adm-btn" type="submit">Lưu kết nối Sheet</button>
       <button class="adm-btn ghost" type="button" data-act="sh-khoa" ${sheet.coKhoa ? '' : 'disabled'}>Xem khoá bảo mật</button>
       <button class="adm-btn ghost" type="button" data-act="sh-sync" ${sheet.url ? '' : 'disabled'}>Ghi lại toàn bộ đơn lên Sheet</button>
@@ -499,7 +500,7 @@ root.addEventListener('submit', async e => {
     return;
   }
   if (f.id === 'adm-sheet') {
-    try { await api('/api/sheet', { method: 'PUT', body: JSON.stringify({ url: o.url }) }); toast('Đã lưu kết nối Google Sheet'); sheet = null; render(); }
+    try { await api('/api/sheet', { method: 'PUT', body: JSON.stringify({ url: o.url, sheetUrl: o.sheetUrl }) }); toast('Đã lưu kết nối Google Sheet'); sheet = null; render(); }
     catch (x) { toast(x.message, true); }
     return;
   }
