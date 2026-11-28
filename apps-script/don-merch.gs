@@ -27,6 +27,7 @@
  */
 const KHOA = 'DAN-KHOA-BAO-MAT-VAO-DAY';
 const TEN_TRANG = 'Đơn merch';
+const TEN_NGUOI_GUI = 'Đoàn TNCS HCM Trường Phổ thông Năng khiếu';   // tên hiện ở mục "Từ" của email
 const THU_MUC_GOC = 'Web Đoàn PTNK';
 const GIU_BAN_SAO_LUU = 30;
 const COT = [
@@ -127,7 +128,7 @@ function layAnh(body) {
 function guiMail(body) {
   const den = String(body.den || '');
   if (!/^[^@\s<>]+@[^@\s<>]+\.[a-z]{2,}$/i.test(den) || den.length > 120) return tra({ ok: false, loi: 'Email người nhận không hợp lệ' });
-  const opt = { name: 'Đoàn trường PTNK', htmlBody: String(body.html || '') };
+  const opt = { name: TEN_NGUOI_GUI, htmlBody: String(body.html || '') };
   if (/^[^@\s<>]+@[^@\s<>]+\.[a-z]{2,}$/i.test(String(body.traLoi || ''))) opt.replyTo = body.traLoi;
   MailApp.sendEmail(den, String(body.tieuDe || 'Đoàn trường PTNK').slice(0, 200), String(body.noiDung || ''), opt);
   return tra({ ok: true });

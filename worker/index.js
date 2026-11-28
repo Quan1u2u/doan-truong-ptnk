@@ -333,7 +333,8 @@ async function soanMail(env, d) {
     `Nơi nhận: ${d.coSo}${cs?.noiNhan ? " (" + cs.noiNhan + ")" : ""}`, `Thời gian nhận hàng: ${nhan}`, "",
     "Khi nhận hàng, vui lòng mang theo mã đơn và thẻ học sinh hoặc giấy tờ tùy thân.", "",
     lh.email ? `Cần hỗ trợ, liên hệ ${lh.email} hoặc nhắn fanpage Đoàn trường.` : "Cần hỗ trợ, nhắn fanpage Đoàn trường.", "",
-    "Ban Chấp hành Đoàn trường Phổ thông Năng khiếu"].join("\n");
+    "Ban Chấp hành Đoàn trường Phổ thông Năng khiếu", "",
+    "Đây là email tự động từ website của Đoàn trường, vui lòng không trả lời trực tiếp thư này."].join("\n");
   const html = `<div style="font-family:Arial,sans-serif;line-height:1.5;color:#1b2a41;max-width:560px">
 <p>Chào ${escHtml(d.hoTen)},</p>
 <p>Ban Chấp hành Đoàn trường PTNK đã <b>xác nhận đơn merch ${escHtml(d.ma)}</b> của bạn.</p>
@@ -342,7 +343,8 @@ async function soanMail(env, d) {
 <p><b>Nơi nhận:</b> ${escHtml(d.coSo)}${cs?.noiNhan ? "<br>" + escHtml(cs.noiNhan) : ""}<br><b>Thời gian nhận hàng:</b> ${escHtml(nhan)}</p>
 <p>Khi nhận hàng, vui lòng mang theo mã đơn và thẻ học sinh hoặc giấy tờ tùy thân.</p>
 <p>${lh.email ? `Cần hỗ trợ, liên hệ ${escHtml(lh.email)} hoặc nhắn fanpage Đoàn trường.` : "Cần hỗ trợ, nhắn fanpage Đoàn trường."}</p>
-<p>Ban Chấp hành Đoàn trường Phổ thông Năng khiếu</p></div>`;
+<p>Ban Chấp hành Đoàn trường Phổ thông Năng khiếu</p>
+<p style="margin-top:20px;padding-top:12px;border-top:1px solid #d9e2f3;font-size:12px;color:#6b7a99">Đây là email tự động từ website của Đoàn trường, vui lòng không trả lời trực tiếp thư này.</p></div>`;
   return { hanh: "gui-mail", den: d.email, tieuDe: `[Đoàn trường PTNK] Xác nhận đơn merch ${d.ma}`, noiDung: text, html, traLoi: lh.email || "" };
 }
 // force = true: gửi lại dù đã gửi. Mặc định chỉ gửi một lần cho mỗi đơn.
