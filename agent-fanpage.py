@@ -16,7 +16,7 @@ Biến môi trường:
     FB_PAGE_TOKEN   (bắt buộc) Page access token của fanpage, quyền pages_read_engagement
     API             địa chỉ website, ví dụ https://doantruongptnk.phamlmquan.workers.dev
     AGENT_KEY       khoá agent (cùng giá trị secret AGENT_KEY của Worker)
-    FB_PAGE_ID      mặc định 100039454884868 (fanpage Ban Chấp hành Đoàn trường)
+    FB_PAGE_ID      mặc định "me" (trang ứng với Page token; không cần đặt)
     FB_GRAPH        mặc định https://graph.facebook.com/v21.0
 Cần thư viện Pillow để thu nhỏ ảnh (pip install pillow); thiếu Pillow thì bài vẫn được thêm nhưng không có ảnh.
 """
