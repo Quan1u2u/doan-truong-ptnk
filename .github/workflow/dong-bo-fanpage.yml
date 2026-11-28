@@ -1,1 +1,25 @@
+name: Đồng bộ bản tin từ fanpage
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"      # mỗi 6 giờ
+  workflow_dispatch:            # hoặc bấm chạy tay trong tab Actions
+
+permissions:
+  contents: read
+
+jobs:
+  dong-bo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pillow
+      - run: python3 agent-fanpage.py
+        env:
+          API: ${{ vars.API_URL }}                  # Settings > Secrets and variables > Actions > Variables
+          AGENT_KEY: ${{ secrets.AGENT_KEY }}
+          FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
 
