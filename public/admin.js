@@ -56,6 +56,7 @@ async function save(msg = 'Đã lưu và cập nhật lên web') {
   finally { busy = false; }
 }
 
+
 /* Thu nhỏ và đổi ảnh sang WebP ngay trên trình duyệt (máy chủ Cloudflare không có thư viện xử lý ảnh) */
 async function toWebp(file, loai) {
   const maxw = loai === 'clb' ? 256 : 1000;
@@ -118,7 +119,7 @@ function viewTin() {
         ${field('ngay', 'Ngày đăng', fromVNDate(n.ngay) || today(), { type: 'date' })}
         ${select('trangThai', 'Trạng thái', n.trangThai || 'done', { open: 'Đang mở', done: 'Đã kết thúc' })}
         ${field('han', 'Hạn chót (nếu có)', (n.han || '').slice(0, 16), { type: 'datetime-local', hint: 'Quá hạn bài tự chuyển "Đã kết thúc".' })}
-        ${field('link', 'Link bài trên fanpage', n.link, { type: 'url', ph: 'https://www.facebook.com/... ', wide: 1 })}
+        ${field('link', 'Link bài trên fanpage', n.link, { type: 'url', ph: 'https://www.facebook.com/...', wide: 1 })}
         ${imgField('anh', 'Ảnh bài', n.anh, 'tin')}
       </div>
       <div class="adm-actions"><button class="adm-btn" type="submit">${editing.isNew ? 'Đăng bài' : 'Lưu thay đổi'}</button><button class="adm-btn ghost" type="button" data-act="cancel">Huỷ</button></div>
@@ -135,6 +136,7 @@ function viewTin() {
     </div></li>`).join('');
   return `<div class="adm-head2"><p>${data.banTin.length} bài. Trang chủ hiện 6 bài đầu, toàn bộ ở Danh mục bản tin.</p><button class="adm-btn" type="button" data-act="new">+ Đăng bài mới</button></div><ul class="adm-list">${rows}</ul>`;
 }
+
 function viewClb() {
   if (editing && editing.kind === 'clb') {
     const c = editing.item;
@@ -217,7 +219,6 @@ const TT = { moi: 'Chờ chuyển khoản', 'bao-tt': 'Đã báo chuyển khoả
 let sheet = null;
 const loadSheet = () => api('/api/sheet').then(d => { sheet = d; render(); }).catch(e => toast(e.message, true));
 const loadOrders = () => api('/api/don-hang').then(d => { orders = d.donHang || d; render(); }).catch(e => toast(e.message, true));
-
 function viewMerch() {
   data.merch ||= { hien: true, hienTrangChu: false, moDon: false, sanPham: [] };
   const m = data.merch;
@@ -282,25 +283,42 @@ function viewMerch() {
       ${field('moTa', 'Mô tả sản phẩm', m.moTa, { area: 1, wide: 1, rows: 3, max: 900 })}
       ${field('thongBaoDong', 'Thông báo khi chưa mở bán', m.thongBaoDong, { area: 1, wide: 1, rows: 2, max: 300 })}
       ${field('hanChot', 'Hạn chót đặt hàng (giờ Việt Nam)', m.hanChot, { type: 'datetime-local', hint: 'Quá hạn form tự đóng. Để trống nếu không có hạn.' })}
-      ${field('hanChotChu', 'Hạn chót hiển thị', m.hanChotChu, { max: 80 })}
-      ${imgField('qr', 'Ảnh QR chuyển khoản', T.qr, 'qr')}
-      ${field('nganHang', 'Ngân hàng', T.nganHang, { max: 100 })}
-      ${field('chuTaiKhoan', 'Chủ tài khoản', T.chuTaiKhoan, { max: 120 })}
-      ${field('soTaiKhoan', 'Số tài khoản', T.soTaiKhoan, { max: 40 })}
+      ${field('hanChotChu', 'Hạn chót hiển thị', m.hanChotChu, { max: 80, ph: '20g00 · 10/12/2026' })}
+      ${field('toiDa', 'Số món tối đa mỗi đơn', m.toiDa || 10, { type: 'number' })}
+      ${field('doiTuong', '"Bạn đến từ" (mỗi dòng một lựa chọn)', (m.doiTuong || []).join('\n'), { area: 1, rows: 4, max: 400, hint: 'Lựa chọn đầu tiên là học sinh: bắt buộc nhập lớp và MSHS.' })}
+      ${field('coSo', 'Nơi nhận hàng (mỗi dòng: Tên cơ sở | nơi nhận)', (m.coSo || []).map(c => `${c.ten} | ${c.noiNhan}`).join('\n'), { area: 1, wide: 1, rows: 3, max: 1000, hint: 'Ví dụ: Cơ sở An Đông | Văn phòng Đoàn, phòng ...' })}
+      ${field('nhanHang', 'Thời gian nhận hàng', m.nhanHang, { max: 300, wide: 1, ph: 'Dự kiến 19–23/01/2027' })}
+      ${field('ghiChu', 'Ghi chú dưới form', m.ghiChu, { area: 1, wide: 1, rows: 2, max: 600 })}
+      ${field('linkBaiGoc', 'Link bài gốc trên fanpage', m.linkBaiGoc, { type: 'url', wide: 1 })}
     </div>
-    <div class="adm-actions"><button class="adm-btn" type="submit">Lưu cài đặt Merch</button><button class="adm-btn ghost" type="button" data-act="sp-new">+ Thêm sản phẩm</button></div>
+    <h3>Thanh toán chuyển khoản</h3>
+    <p class="adm-note">Sau khi đặt hàng, người mua thấy mã QR và thông tin dưới đây, nội dung chuyển khoản là mã đơn (ví dụ BCH1A2B3C).</p>
+    <div class="adm-grid">
+      ${imgField('tt_anhQR', 'Ảnh mã QR tài khoản ngân hàng', T.anhQR, 'qr')}
+      ${field('tt_nganHang', 'Ngân hàng', T.nganHang, { max: 80, ph: 'Ví dụ: Vietcombank' })}
+      ${field('tt_soTK', 'Số tài khoản', T.soTK, { max: 30 })}
+      ${field('tt_chuTK', 'Chủ tài khoản', T.chuTK, { max: 80, wide: 1 })}
+      ${field('tt_huongDan', 'Hướng dẫn thêm (tuỳ chọn)', T.huongDan, { area: 1, wide: 1, rows: 2, max: 400 })}
+    </div>
+    <div class="adm-actions"><button class="adm-btn" type="submit">Lưu cài đặt Merch</button><a class="adm-btn ghost" href="./merch.html" target="_blank" rel="noopener">Xem trang Merch</a></div>
   </form>
-  <div class="adm-form"><h3>Sản phẩm (${m.sanPham.length})</h3><ul class="adm-list">${spRows || '<li class="adm-note">Chưa có sản phẩm.</li>'}</ul></div>
-  <div class="adm-form"><h3>Google Sheet · Apps Script</h3>
-    <p class="adm-note">Cấu hình nơi lưu đơn hàng. Có thể thay Google Sheet mà không cần triển khai lại Apps Script.</p>
-    <form id="adm-sheet" class="adm-grid">
-      ${field('url', 'URL triển khai Apps Script', sheet?.url || '', { type: 'url', wide: 1, ph: 'https://script.google.com/macros/s/.../exec' })}
-      ${field('sheetUrl', 'Link Google Sheet', sheet?.sheetUrl || '', { type: 'url', wide: 1, ph: 'https://docs.google.com/spreadsheets/d/...' })}
-      <div class="adm-actions"><button class="adm-btn" type="submit">Lưu cấu hình Sheet</button></div>
-    </form>
-  </div>
-  <div class="adm-form"><h3>Đơn hàng (${orders ? orders.length : '…'})</h3>${od}</div>`;
+  <div class="adm-form"><div class="adm-head2"><h3>Sản phẩm</h3><button class="adm-btn" type="button" data-act="sp-new">+ Thêm sản phẩm</button></div><ul class="adm-list">${spRows}</ul></div>
+  <form class="adm-form" id="adm-sheet">
+    <h3>Kết nối Google (Sheet, Drive, Gmail)</h3>
+    <p class="adm-note">Một Google Apps Script (file <code>apps-script/don-merch.gs</code>) làm ba việc: ghi đơn lên Google Sheet khi người mua bấm "Tôi đã thanh toán", lưu ảnh tải lên và bản sao lưu hằng ngày vào Google Drive của BCH, và tự gửi email xác nhận cho người mua khi đơn chuyển sang "Đã xác nhận" hoặc "Đã nhận tiền" (mỗi đơn một lần).</p>
+    ${!sheet ? '<p class="adm-note">Đang tải…</p>' : `<div class="adm-grid">
+      ${field('url', 'URL ứng dụng web Apps Script (đuôi /exec)', sheet.url, { type: 'url', wide: 1, ph: 'https://script.google.com/macros/s/.../exec' })}
+    </div>
+    <p class="adm-note">Trạng thái: ${sheet.url ? 'đã kết nối' : 'chưa kết nối'}${sheet.coKhoa ? ' · đã có khoá bảo mật' : ''}.</p>
+    <div class="adm-actions"><button class="adm-btn" type="submit">Lưu kết nối Sheet</button>
+      <button class="adm-btn ghost" type="button" data-act="sh-khoa" ${sheet.coKhoa ? '' : 'disabled'}>Xem khoá bảo mật</button>
+      <button class="adm-btn ghost" type="button" data-act="sh-sync" ${sheet.url ? '' : 'disabled'}>Ghi lại toàn bộ đơn lên Sheet</button>
+      <button class="adm-btn ghost" type="button" data-act="sh-bk" ${sheet.url ? '' : 'disabled'}>Sao lưu lên Drive ngay</button></div>
+    <p class="adm-note" id="sh-khoa-out"></p>`}
+  </form>
+  <div class="adm-form"><h3>Đơn đặt</h3>${od}</div>`;
 }
+
 function render() {
   const open = location.pathname.replace(/\/$/, '') === '/admin';
   document.documentElement.classList.toggle('adm-open', open);
@@ -365,7 +383,7 @@ root.addEventListener('click', async e => {
     orders = null; render(); return;
   }
   if (act === 'od-csv') {
-    const q = v => { let x = String(v ?? ''); if (/^[=+\-@\t\r]/.test(x)) x = "'" + x; return `"${x.replace(/"/g, '""')}"`; };
+    const q = v => { let x = String(v ?? ''); if (/^[=+\-@\t\r]/.test(x)) x = "'" + x; return `"${x.replace(/"/g, '""')}"`; }; // chặn chèn công thức Excel
     const rows = [['Mã', 'Thời gian', 'Họ tên', 'Đến từ', 'Lớp', 'MSHS', 'SĐT', 'Email', 'Nhận tại', 'Chi tiết', 'Số món', 'Tổng tiền', 'Ghi chú', 'Trạng thái']]
       .concat(orders.map(o => [o.ma, o.luc, o.hoTen, o.doiTuong, o.lop, o.mshs, "'" + o.sdt, o.email, o.coSo, o.items.map(it => `${[it.ten, it.tuyChon, it.size].filter(Boolean).join(' ')} x${it.sl}`).join('; '), o.soAo, o.tongTien, o.ghiChu, TT[o.trangThai]]));
     const blob = new Blob(['\ufeff' + rows.map(r => r.map(q).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
@@ -393,12 +411,13 @@ root.addEventListener('click', async e => {
   if (act === 'del') {
     if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Bấm lần nữa để xoá'; setTimeout(() => { if (t.isConnected) { t.dataset.sure = ''; t.textContent = 'Xoá'; } }, 4000); return; }
     const removed = data[listKey].splice(i, 1);
-    if (!(await save('Đã xoá')) ) data[listKey].splice(i, 0, ...removed);
+    if (!(await save('Đã xoá'))) data[listKey].splice(i, 0, ...removed);
     render(); return;
   }
   if (act === 'backup') {
     const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `sao-luu-web-doan-${today()}.json`; a.click();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `sao-luu-web-doan-${today()}.json`; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000); return;
   }
   if (t.classList.contains('adm-clearimg')) {
@@ -416,11 +435,9 @@ root.addEventListener('change', async e => {
     if (Object.values(NHAN).includes(nhan.value) || !nhan.value) nhan.value = NHAN[inp.value];
   }
   if (inp.dataset.od) {
-    try {
-      await api(`/api/don-hang/${encodeURIComponent(inp.dataset.od)}`, { method: 'PATCH', body: JSON.stringify({ trangThai: inp.value }) });
-      const o = orders.find(x => x.ma === inp.dataset.od); if (o) o.trangThai = inp.value;
-      toast('Đã cập nhật trạng thái đơn'); render();
-    } catch (x) { toast(x.message, true); }
+    try { await api(`/api/don-hang/${encodeURIComponent(inp.dataset.od)}`, { method: 'PATCH', body: JSON.stringify({ trangThai: inp.value }) });
+      const o = orders.find(x => x.ma === inp.dataset.od); if (o) o.trangThai = inp.value; toast('Đã cập nhật trạng thái đơn'); render(); }
+    catch (x) { toast(x.message, true); }
     return;
   }
   if (inp.type !== 'file' || !inp.files[0]) return;
@@ -482,10 +499,8 @@ root.addEventListener('submit', async e => {
     return;
   }
   if (f.id === 'adm-sheet') {
-    try {
-      await api('/api/sheet', { method: 'PUT', body: JSON.stringify({ url: o.url, sheetUrl: o.sheetUrl }) });
-      toast('Đã lưu kết nối Google Sheet'); sheet = null; render();
-    } catch (x) { toast(x.message, true); }
+    try { await api('/api/sheet', { method: 'PUT', body: JSON.stringify({ url: o.url }) }); toast('Đã lưu kết nối Google Sheet'); sheet = null; render(); }
+    catch (x) { toast(x.message, true); }
     return;
   }
   if (f.id === 'adm-merch') {
