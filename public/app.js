@@ -482,4 +482,22 @@ if (spyOn) {
 
   if (isRoute(route)) requestAnimationFrame(() => goTo(route));
 }
+
+/* Menu trên điện thoại (nút ba gạch): mở/đóng, tự đóng khi chọn mục, bấm ra ngoài, nhấn Esc hoặc khi màn hình đủ rộng */
+const topbarEl = document.querySelector('.topbar');
+const menuBtn = document.querySelector('.menu-btn');
+if (topbarEl && menuBtn) {
+  const setMenu = open => {
+    topbarEl.classList.toggle('menu-open', open);
+    menuBtn.setAttribute('aria-expanded', String(open));
+    menuBtn.setAttribute('aria-label', open ? 'Đóng menu' : 'Mở menu');
+  };
+  menuBtn.addEventListener('click', () => setMenu(!topbarEl.classList.contains('menu-open')));
+  topbarEl.addEventListener('click', e => { if (e.target.closest('nav a')) setMenu(false); });
+  document.addEventListener('click', e => { if (!topbarEl.contains(e.target)) setMenu(false); });
+  addEventListener('keydown', e => {
+    if (e.key === 'Escape' && topbarEl.classList.contains('menu-open')) { setMenu(false); menuBtn.focus(); }
+  });
+  matchMedia('(min-width: 1181px)').addEventListener('change', e => { if (e.matches) setMenu(false); });
+}
 })();

@@ -282,14 +282,14 @@ html.adm-open, html.adm-open body { overflow: hidden; }
 .adm-body { max-width: 1000px; margin: 0 auto; padding: 16px 20px 80px; }
 .adm-head2 { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; margin-bottom: 12px; color: var(--muted); }
 .adm-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.adm-row { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; background: #fff; border: 1px solid var(--line); border-radius: 10px; }
+.adm-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px; background: #fff; border: 1px solid var(--line); border-radius: 10px; min-width: 0; }
 .adm-thumb { width: 64px; height: 48px; border-radius: 6px; overflow: hidden; background: var(--sky); }
 .adm-thumb.round { width: 48px; border-radius: 50%; }
 .adm-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.adm-rtext { min-width: 0; }
+.adm-rtext { min-width: 0; overflow-wrap: anywhere; }
 .adm-rtext strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .adm-rtext small { color: var(--muted); }
-.adm-rbtn { display: flex; gap: 6px; align-items: center; }
+.adm-rbtn { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .adm-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font: inherit; font-weight: 700; padding: 10px 18px; border-radius: 999px; border: 2px solid var(--blue); background: var(--blue); color: #fff; cursor: pointer; text-decoration: none; white-space: nowrap; }
 .adm-btn:hover { background: var(--blue-deep); border-color: var(--blue-deep); }
 .adm-btn.ghost { background: #fff; color: var(--blue); }
@@ -314,7 +314,7 @@ html.adm-open, html.adm-open body { overflow: hidden; }
 .adm-checks { display: flex; flex-wrap: wrap; gap: 8px 18px; }
 .adm-checks label, .adm-switch { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
 .adm-switch { font-weight: 700; margin-bottom: 16px; }
-.adm-checks input, .adm-switch input { width: 18px; height: 18px; accent-color: var(--blue); }
+.adm-checks input, .adm-switch input { width: 18px; height: 18px; flex: none; accent-color: var(--blue); }
 .adm-imgrow { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
 .adm-imgrow > div:last-child { display: grid; gap: 6px; justify-items: start; }
 .adm-prev { width: 160px; height: 110px; border-radius: 8px; overflow: hidden; background: var(--sky); display: grid; place-items: center; color: var(--muted); font-size: var(--text-xs); }
@@ -327,7 +327,7 @@ html.adm-open, html.adm-open body { overflow: hidden; }
 .adm-toast.show { transform: translate(-50%, 0); }
 @media (max-width: 640px) {
   .adm-grid { grid-template-columns: 1fr; }
-  .adm-row { grid-template-columns: 48px 1fr; }
+  .adm-row { grid-template-columns: 48px minmax(0, 1fr); }
   .adm-thumb { width: 48px; height: 40px; }
   .adm-rbtn { grid-column: 1 / -1; justify-content: flex-end; }
 }
@@ -387,9 +387,9 @@ html.adm-open, html.adm-open body { overflow: hidden; }
 .adm-table th { background: var(--sky-2); }
 .adm-order .adm-rtext small { display: block; }
 .adm-rbtn select { font: inherit; font-size: var(--text-sm); padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; min-height: 36px; }
-.adm-row.adm-order { grid-template-columns: 1fr auto; }
+.adm-row.adm-order { grid-template-columns: minmax(0, 1fr) auto; }
 .adm-order .adm-rtext strong { white-space: normal; }
-@media (max-width: 640px) { .adm-row.adm-order { grid-template-columns: 1fr; } .adm-order .adm-rbtn { justify-content: flex-start; } }
+@media (max-width: 640px) { .adm-row.adm-order { grid-template-columns: minmax(0, 1fr); } .adm-order .adm-rbtn { justify-content: flex-start; } }
 .merchpage { padding-top: 32px; }
 .merchpage h1 { font-size: var(--text-xl); color: var(--blue-ink); }
 .mc-closed { background: var(--paper); border: 1px dashed var(--line); border-radius: var(--radius); padding: 24px; color: var(--muted); }
@@ -551,4 +551,67 @@ button.btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 @media (max-width: 560px) {
   .mc-item .mc-buy .btn { flex: 0 0 auto; padding: 10px 8px; }
   .mc-dlg .mc-fields { grid-template-columns: 1fr; }
+}
+
+/* ---------- Tối ưu cho điện thoại ---------- */
+html { -webkit-tap-highlight-color: rgba(27, 95, 217, .15); }
+a, button, label, select, summary, input, textarea { touch-action: manipulation; }   /* bỏ độ trễ và phóng to khi chạm đúp */
+
+/* Menu: dưới 1180px thanh điều hướng thu vào nút ba gạch */
+.menu-btn, .msg-menu { display: none; }
+@media (max-width: 1180px) {
+  .menu-btn { display: inline-grid; place-items: center; flex: none; width: 44px; height: 44px; padding: 0; border: 2px solid var(--line); border-radius: 12px; background: #fff; color: var(--blue-ink); cursor: pointer; }
+  .menu-btn span, .menu-btn span::before, .menu-btn span::after { display: block; width: 20px; height: 2px; border-radius: 2px; background: currentColor; transition: transform .2s, top .2s, background .2s; }
+  .menu-btn span { position: relative; }
+  .menu-btn span::before, .menu-btn span::after { content: ''; position: absolute; left: 0; }
+  .menu-btn span::before { top: -6px; }
+  .menu-btn span::after { top: 6px; }
+  .menu-btn[aria-expanded="true"] span { background: transparent; }
+  .menu-btn[aria-expanded="true"] span::before { top: 0; transform: rotate(45deg); }
+  .menu-btn[aria-expanded="true"] span::after { top: 0; transform: rotate(-45deg); }
+  .topbar.menu-open nav { position: absolute; top: 100%; left: 0; right: 0; display: grid; gap: 2px; margin: 0; padding: 8px 16px 16px; background: #fff; border-bottom: 1px solid var(--line); box-shadow: 0 16px 28px rgba(10, 43, 115, .16); max-height: calc(100dvh - 72px); overflow-y: auto; }
+  .topbar.menu-open nav a { padding: 14px 16px; font-size: var(--text-base); border-radius: 12px; }
+}
+@media (max-width: 600px) {
+  .bar > .msg { display: none; }                       /* nút "Nhắn tin BCH" chuyển vào trong menu cho đỡ chật */
+  .bar .menu-btn { margin-left: auto; }
+  .topbar.menu-open nav .msg-menu { display: block; margin-top: 8px; text-align: center; font-weight: 700; color: #fff; background: var(--blue); }
+}
+
+/* Màn hình cảm ứng: vùng chạm tối thiểu 44px, ô nhập 16px để iPhone không tự phóng to */
+@media (pointer: coarse) {
+  .search input, .adm-f input, .adm-f textarea, .adm-f select, .adm-rbtn select,
+  .mc-order input, .mc-order select, .mc-order textarea,
+  .mc-dlg input, .mc-dlg select, .mc-dlg textarea, .mc-pickopts select, .qty input { font-size: 16px; }
+  .brand { min-height: 44px; }
+  .msg { display: inline-flex; align-items: center; min-height: 44px; }
+  .textlink { display: inline-flex; align-items: center; min-height: 44px; }
+  .contacts a { display: inline-block; padding-block: 9px; }
+  .mc-item .btn, .mc-add { min-height: 44px; }
+  .copy { min-height: 40px; padding: 8px 14px; }
+  .qty button { width: 44px; height: 44px; }
+  .qty input { min-height: 44px; }
+  .qty.sm button { width: 40px; height: 40px; }
+  .cart-rm { padding: 12px 8px; }
+  .adm-btn, .adm-btn.sm { min-height: 44px; }
+  .adm-ico { width: 40px; height: 40px; }
+  .adm-rbtn select { min-height: 44px; }
+}
+
+/* Không có chuột: bỏ hiệu ứng nhấc lên khi rê, tránh bị "dính" sau khi chạm */
+@media (hover: none) {
+  .btn:hover, .card a:hover, .portal[href]:hover, .clubgrid li > a:hover, .mc-tcard:hover { transform: none; }
+  .card a:hover { box-shadow: 0 4px 14px rgba(10, 43, 115, .08); }
+  .portal[href]:hover { box-shadow: 6px 6px 0 var(--yellow); }
+}
+
+/* Trang quản trị trên điện thoại: thanh tiêu đề cuộn đi, thanh tab dính lại để chuyển mục nhanh */
+@media (max-width: 640px) {
+  .adm-top { position: static; padding: 10px 12px; }
+  .adm-top small { display: none; }
+  .adm-tabs { position: sticky; top: 0; z-index: 3; padding: 8px 12px; background: var(--sky-2); border-bottom: 1px solid var(--line); scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .adm-tabs::-webkit-scrollbar { display: none; }
+  .adm-body { padding: 12px 12px 72px; }
+  .adm-form { padding: 14px; }
+  .adm-actions .adm-btn { flex: 1 1 100%; }
 }
