@@ -47,3 +47,31 @@ Cách hoạt động:
 - **Email xác nhận:** tự gửi một lần khi đơn chuyển sang "Đã xác nhận" hoặc "Đã nhận tiền". Nút "Gửi email xác nhận" trên từng đơn để gửi lại. Gmail thường giới hạn khoảng 100 email mỗi ngày (tài khoản @gmail.com).
 - **Sao lưu:** mỗi ngày lúc 03:00 (giờ Việt Nam), Worker gửi nội dung và đơn hàng lên Drive, giữ 30 bản mới nhất.
 - Nội dung email nằm ở hàm `soanMail` trong `worker/index.js`.
+
+## Agent đồng bộ bản tin từ fanpage (`agent-fanpage.py`)
+
+Agent lấy 20 bài mới nhất của fanpage, bài nào đã có (trùng mã bài hoặc link) thì bỏ qua, bài nào chưa có thì thu nhỏ ảnh, tải lên và thêm vào đầu danh sách bản tin, cùng định dạng với các bản tin trước. Bản tin cũ không bị sửa.
+Nhóm, nhãn và hạn chót được đoán theo từ khoá, nên hãy xem lại trong trang quản trị sau mỗi lần chạy. Khi bài có chữ "mở đơn/đăng ký/tuyển" kèm "hạn ... dd/mm/yyyy" còn hiệu lực thì bài được đặt trạng thái "open" và có `han`.
+
+Agent dùng Facebook Graph API (cách chính thức, ổn định) chứ không cào trang web, vì Facebook cấm và liên tục chặn việc cào.
+
+### Lấy Page access token (làm một lần, bằng tài khoản quản trị fanpage)
+1. Vào developers.facebook.com → My Apps → Create App (loại Business hoặc Other). App để ở chế độ Development là đủ khi bạn là quản trị viên của trang.
+2. Tools → Graph API Explorer: chọn app, chọn quyền `pages_show_list` và `pages_read_engagement`, bấm Generate Access Token và chọn fanpage.
+3. Token này sống ngắn. Đổi sang dài hạn: gọi `https://graph.facebook.com/v21.0/oauth/access_token?grant_type=fb_exchange_token&client_id=<APP_ID>&client_secret=<APP_SECRET>&fb_exchange_token=<TOKEN_NGAN>` để lấy user token dài hạn, rồi gọi `https://graph.facebook.com/v21.0/me/accounts?access_token=<USER_TOKEN_DAI>`. Trường `access_token` của fanpage trong kết quả chính là **Page token không hết hạn**.
+4. Giữ bí mật token và App Secret. Giao diện và quyền của Meta thay đổi theo thời gian, nếu có chỗ khác thì xem tài liệu Graph API của Meta.
+
+### Chạy thử trên máy
+```bash
+pip install pillow
+export API=https://doantruongptnk.phamlmquan.workers.dev
+export AGENT_KEY=<secret AGENT_KEY của Worker>
+export FB_PAGE_TOKEN=<Page token>
+python3 agent-fanpage.py --thu     # chỉ in ra bài sẽ thêm
+python3 agent-fanpage.py           # thêm thật
+```
+
+### Chạy tự động mỗi 6 giờ (GitHub Actions)
+Trong repo: Settings → Secrets and variables → Actions. Thêm Secret `AGENT_KEY`, Secret `FB_PAGE_TOKEN` và Variable `API_URL` (địa chỉ website). Workflow `.github/workflows/dong-bo-fanpage.yml` sẽ chạy theo lịch, hoặc bấm Run workflow trong tab Actions. GitHub tạm dừng lịch tự động nếu repo không có hoạt động nào trong 60 ngày.
+
+Lưu ý: agent đọc rồi ghi cả danh sách bản tin, nên nếu bạn đang sửa bản tin trong trang quản trị đúng lúc agent chạy thì có thể bị ghi đè (Worker luôn lưu bản cũ trong lịch sử, giữ 30 bản gần nhất).
