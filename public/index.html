@@ -13,9 +13,10 @@
 <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="./assets/favicon-192.png">
 <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
+<link rel="preload" as="image" href="./assets/hd-hoi-trai-400.webp" imagesrcset="./assets/hd-hoi-trai-400.webp 400w, ./assets/hd-hoi-trai.webp 800w" imagesizes="(max-width:600px) 62vw, 330px" fetchpriority="high">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=Dancing+Script:wght@600;700&display=swap&subset=vietnamese" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;800;900&family=Dancing+Script:wght@700&display=swap&subset=vietnamese" rel="stylesheet">
 <link rel="stylesheet" href="./base.css?v=4a63501404" integrity="sha256-SmNQFARQTBwYmi5Ho5Lh5PMBhMPoMVUoRTPdKLM8iQk=" crossorigin="anonymous">
 </head>
 <body>
@@ -23,7 +24,7 @@
 <header class="topbar" id="top">
   <div class="wrap bar">
     <a class="brand" href="/top" aria-label="Về đầu trang">
-      <img src="./assets/nhan-dien-doan.png" alt="Biểu trưng Trường Phổ thông Năng khiếu, Đoàn TNCS Hồ Chí Minh và Ban Chấp hành Đoàn trường">
+      <img src="./assets/nhan-dien-doan.webp" width="334" height="119" fetchpriority="low" alt="Biểu trưng Trường Phổ thông Năng khiếu, Đoàn TNCS Hồ Chí Minh và Ban Chấp hành Đoàn trường">
       <span class="brandtext">Đoàn trường PTNK<small>Ban Chấp hành · Nhiệm kỳ 2026–2027</small></span>
     </a>
     <nav id="site-nav" aria-label="Điều hướng chính">
@@ -58,8 +59,8 @@
         </div>
       </div>
       <div class="stack" aria-label="Hoạt động tiêu biểu của Đoàn trường">
-        <figure class="pin p1"><img src="./assets/hd-hoi-trai.webp" alt="Hội trại truyền thống của Đoàn trường Phổ thông Năng khiếu"></figure>
-        <figure class="pin p2"><img src="./assets/hd-hoi-xuan.webp" alt="Hội Xuân của học sinh Phổ thông Năng khiếu"></figure>
+        <figure class="pin p1"><img src="./assets/hd-hoi-trai-400.webp" srcset="./assets/hd-hoi-trai-400.webp 400w, ./assets/hd-hoi-trai.webp 800w" sizes="(max-width:600px) 62vw, 330px" width="800" height="800" fetchpriority="high" decoding="async" alt="Hội trại truyền thống của Đoàn trường Phổ thông Năng khiếu"></figure>
+        <figure class="pin p2"><img src="./assets/hd-hoi-xuan-400.webp" srcset="./assets/hd-hoi-xuan-400.webp 400w, ./assets/hd-hoi-xuan.webp 800w" sizes="(max-width:600px) 52vw, 280px" width="800" height="800" decoding="async" alt="Hội Xuân của học sinh Phổ thông Năng khiếu"></figure>
         <span class="sticker">20.11</span>
       </div>
     </div>
@@ -72,7 +73,7 @@
 
   <section class="open" id="mo-don" data-mo-don>
     <div class="wrap opengrid">
-      <figure class="openimg"><img id="md-anh" src="./assets/fb-ctv.webp" alt="Ấn phẩm của đơn đang mở"></figure>
+      <figure class="openimg"><img id="md-anh" src="./assets/fb-ctv.webp" width="760" height="760" loading="lazy" decoding="async" alt="Ấn phẩm của đơn đang mở"></figure>
       <div class="opencard">
         <span class="status live" id="ctv-status">Đang mở đơn</span>
         <h2 id="md-tieude"></h2>
@@ -135,7 +136,7 @@
       </div>
       <figure class="board">
         <span class="tape" aria-hidden="true"></span>
-        <img src="./assets/fb-bch.webp" alt="Ấn phẩm giới thiệu thành viên Ban Chấp hành Đoàn trường Phổ thông Năng khiếu nhiệm kỳ 2026–2027">
+        <img src="./assets/fb-bch.webp" width="1100" height="922" loading="lazy" decoding="async" alt="Ấn phẩm giới thiệu thành viên Ban Chấp hành Đoàn trường Phổ thông Năng khiếu nhiệm kỳ 2026–2027">
       </figure>
     </div>
   </section>
