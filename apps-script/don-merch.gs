@@ -25,7 +25,7 @@
  *
  * Hạn mức Gmail: khoảng 100 email/ngày với tài khoản @gmail.com, 1500/ngày với Google Workspace.
  */
-const KHOA = 'DAN-KHOA-BAO-MAT-VAO-DAY';
+const KHOA = 'dxQ_UfVS45Ja8eURHA969ddf';
 const TEN_TRANG = 'Đơn merch';
 const TEN_NGUOI_GUI = 'Đoàn TNCS HCM Trường Phổ thông Năng khiếu';   // tên hiện ở mục "Từ" của email
 const THU_MUC_GOC = 'Web Đoàn PTNK';
