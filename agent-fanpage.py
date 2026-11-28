@@ -25,7 +25,7 @@ from datetime import datetime, timedelta, timezone
 
 VN = timezone(timedelta(hours=7))
 UA = "doan-fanpage-agent/1.0"
-PAGE = os.environ.get("FB_PAGE_ID", "100039454884868")
+PAGE = os.environ.get("FB_PAGE_ID", "me")
 GRAPH = os.environ.get("FB_GRAPH", "https://graph.facebook.com/v21.0").rstrip("/")
 EMOJI = re.compile("[\U0001F000-\U0001FAFF☀-➿⬀-⯿️‍]")
 
